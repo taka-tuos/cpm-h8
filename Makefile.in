@@ -28,10 +28,11 @@ $(TARGET).mot : $(OBJ) Makefile Makefile.in
 
 clean :
 	-$(RM) -f $(OBJ)
+	-$(RM) $(TARGET).elf
 
 clean-full :
 	$(MAKE) clean
-	-$(RM) $(TARGET)
+	-$(RM) $(TARGET).mot
 
 git :
 	$(MAKE) clean-full

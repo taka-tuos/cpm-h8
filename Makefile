@@ -1,11 +1,11 @@
-TARGET	= h8test
-OBJ		= main.o xprintf.o h8crt0.o
+TARGET	= cpm-h8
+OBJ		= main.o xprintf.o sci1.o mmc_bb.o z80cpm.o z80emu.o h8crt0.o
 
 PREFIX	= h8300-elf-
 
-CFLAGS	:= -mh -mint32 -nostartfiles -std=gnu99 -Wall 
+CFLAGS	:= -Os -mh -mint32 -nostartfiles -std=gnu99 -Wall 
 ASFLAGS	:= 
-LDFLAGS	:= -mh -mint32 -nostartfiles -T h8rom.x
+LDFLAGS	:= $(CFLAGS) -Wl,-Map=$(TARGET).map -T h8rom.x
 LIBS	:= 
 
 include Makefile.in

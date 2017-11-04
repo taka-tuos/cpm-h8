@@ -3,26 +3,14 @@
 
 #include "iodefine.h"
 #include "xprintf.h"
+#include "sci1.h"
+
+#include "z80cpm.h"
 
 #include <stdlib.h>
 
-void sci_init(void)
-{
-	unsigned int dmy;
-	SCI1.SCR.BYTE = 0;
-	SCI1.SMR.BYTE = 0;
-	SCI1.BRR = 79;
-	for(dmy = 280;dmy > 0;dmy--);
-	SCI1.SCR.BYTE = 0x30;
-	SCI1.SSR.BYTE &= 0x80;
-}
-
-void sci_putc(unsigned char c)
-{
-	while(!SCI1.SSR.BIT.TDRE);
-	SCI1.TDR = c;
-	SCI1.SSR.BIT.TDRE = 0;
-}
+unsigned char sci_txbuf[128];
+unsigned char sci_rxbuf[128];
 
 int check_memory(void)
 {
@@ -59,14 +47,16 @@ int check_memory(void)
 
 int main(void)
 {
-	sci_init();
+	rs_init(br9600,sci_txbuf,128,sci_rxbuf,128);
 	
-	xdev_out(sci_putc);
+	set_ccr(0);
+	
+	xdev_out(rs_putc);
 	
 	BSC.ABWCR.BIT.ABW3 = 1; // CS3 空間は８ビット幅
 	BSC.ASTCR.BIT.AST3 = 1; // CS3 空間は３ステート
 	BSC.WCR.BYTE = 0xF3; // プログラマブルウェイトモード、３クロック挿入
-	BSC.WCER.BIT.WCE3 = 1; // CS1 空間の WSC は有効
+	BSC.WCER.BIT.WCE3 = 1; // CS3 空間の WSC は有効
 	P1.DDR = 0xFF; // A0-A7 端子は有効
 	P2.DDR = 0xFF; // A8-A15 端子は有効
 	P5.DDR = 0x07; // A16-A18 端子は有効
@@ -74,8 +64,13 @@ int main(void)
 
 	int memchk = check_memory();
 	
-	if(memchk) xputs("RAM OK");
-	else  xputs("RAM NG");
+	if(memchk) xputs("RAM OK\n");
+	else {
+		xputs("RAM NG\n");
+		while(1);
+	}
+	
+	cpm80_emulation();
 
 	return 0;
 }
